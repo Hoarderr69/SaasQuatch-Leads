@@ -152,17 +152,29 @@ Your Name`);
   const handleSend = async () => {
     if (channel === "email") {
       if (!API_BASE) {
-        toast({ title: "Missing backend URL", description: "REACT_APP_BACKEND_URL is not set", variant: "destructive" });
+        toast({
+          title: "Missing backend URL",
+          description: "REACT_APP_BACKEND_URL is not set",
+          variant: "destructive",
+        });
         return;
       }
       const contact = mockContacts.find((c) => c.id === selectedContact);
       const to = contact?.email;
       if (!to) {
-        toast({ title: "Missing email", description: "Selected contact has no email", variant: "destructive" });
+        toast({
+          title: "Missing email",
+          description: "Selected contact has no email",
+          variant: "destructive",
+        });
         return;
       }
       if (!body) {
-        toast({ title: "No content", description: "Generate or write content first", variant: "destructive" });
+        toast({
+          title: "No content",
+          description: "Generate or write content first",
+          variant: "destructive",
+        });
         return;
       }
       try {
@@ -174,7 +186,11 @@ Your Name`);
         if (!res.ok) throw new Error(await res.text());
         toast({ title: "Sent!", description: `Email sent to ${to}` });
       } catch (e) {
-        toast({ title: "Send failed", description: String(e), variant: "destructive" });
+        toast({
+          title: "Send failed",
+          description: String(e),
+          variant: "destructive",
+        });
       }
       return;
     }
@@ -186,10 +202,16 @@ Your Name`);
     try {
       await navigator.clipboard.writeText(message);
       window.open(profileUrl, "_blank", "noopener,noreferrer");
-      toast({ title: "Copied & Opened", description: "Message copied. LinkedIn opened in a new tab." });
+      toast({
+        title: "Copied & Opened",
+        description: "Message copied. LinkedIn opened in a new tab.",
+      });
     } catch (e) {
       window.open(profileUrl, "_blank", "noopener,noreferrer");
-      toast({ title: "Opened LinkedIn", description: "Copy the message manually if clipboard failed." });
+      toast({
+        title: "Opened LinkedIn",
+        description: "Copy the message manually if clipboard failed.",
+      });
     }
   };
 

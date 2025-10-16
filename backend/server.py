@@ -15,6 +15,7 @@ from io import StringIO
 import asyncio
 import smtplib
 from email.mime.text import MIMEText
+from contextlib import asynccontextmanager
 
 
 ROOT_DIR = Path(__file__).parent
@@ -24,9 +25,6 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
-app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -483,7 +481,64 @@ async def delete_sequence(sequence_id: str):
         raise HTTPException(status_code=404, detail="Sequence not found")
     return {"status": "deleted", "sequence_id": sequence_id}
 
-# Include the router in the main app
+import asyncio
+
+# --- REPLACEMENT BLOCK: FastAPI lifespan, router, middleware, logging ---
+_scheduler_task = None
+
+# configure logging early so logger is available in lifespan
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Runs on startup and shutdown.
+    - Startup: create scheduler background task
+    - Shutdown: cancel scheduler task and close DB client
+    """
+    global _scheduler_task
+    # --- STARTUP work ---
+    try:
+        # start scheduler background task
+        if _scheduler_task is None or _scheduler_task.done():
+            _scheduler_task = asyncio.create_task(scheduler_loop())
+            logger.info("Scheduler task started")
+    except Exception as e:
+        logger.exception(f"Error during startup: {e}")
+    try:
+        yield
+    finally:
+        # --- SHUTDOWN work ---
+        # cancel scheduler task
+        try:
+            if _scheduler_task is not None:
+                _scheduler_task.cancel()
+                try:
+                    await _scheduler_task
+                except asyncio.CancelledError:
+                    pass
+                except Exception as e:
+                    logger.exception(f"Exception while awaiting scheduler task during shutdown: {e}")
+                logger.info("Scheduler task stopped")
+        except Exception as e:
+            logger.exception(f"Failed to stop scheduler task: {e}")
+
+        # close mongo client
+        try:
+            client.close()
+            logger.info("MongoDB client closed")
+        except Exception as e:
+            logger.exception(f"Failed to close MongoDB client: {e}")
+
+
+# create FastAPI app with lifespan
+app = FastAPI(lifespan=lifespan)
+
+# include router and middleware
 app.include_router(api_router)
 
 app.add_middleware(
@@ -494,16 +549,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+# configure logging already done above
 
 
 # ========== Automation & Scheduler ==========
@@ -647,10 +693,4 @@ async def scheduler_loop():
         await asyncio.sleep(interval)
 
 
-_scheduler_task = None
-
-
-@app.on_event("startup")
-async def _start_scheduler():
-    global _scheduler_task
-    _scheduler_task = asyncio.create_task(scheduler_loop())
+# --- END REPLACEMENT BLOCK ---
