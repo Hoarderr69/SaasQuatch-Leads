@@ -1,0 +1,33 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.App {
+    min-height: 100vh;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select, textarea {
+    transition: all 0.2s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f1117;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}
