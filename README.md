@@ -33,7 +33,14 @@ AI-assisted lead generation and outreach automation. This repo includes:
   - From the UI, open the profile and copy the message in one click to paste in LinkedIn.
 
 - Tracking
+
   - Response Tracker shows aggregate metrics (sent, opened, replied, positive) across sequences.
+
+- LinkedIn activity scoring (notebook)
+  - A simple, explainable reply‑propensity heuristic you can demo to recruiters using the provided notebook `SaasQuatchLeads.ipynb`.
+  - Inputs: days since last post, 30‑day activity count, connection degree, accepts messages, followers, optional historical reply rate, shared industry, open‑to‑work, recent job changes.
+  - Output: score (0–100), band (low/medium/high), and human‑readable reasons.
+  - Note: Use activity data you have permission to access; avoid scraping/automation.
 
 ## Project structure
 
@@ -144,6 +151,12 @@ npm start
 
 - View aggregated metrics across sequences: sent, opened, replied, positive.
 
+4. LinkedIn activity (notebook demo)
+
+- Open `SaasQuatchLeads.ipynb` in VS Code or Jupyter and run the cells.
+- Adjust the activity parameters to see the reply‑propensity score and the reasoning bullets you can share with recruiters.
+- This is a transparent heuristic to guide prioritization—not a replacement for human review.
+
 ## API overview (selected)
 
 Base: `http://127.0.0.1:8000/api`
@@ -197,4 +210,5 @@ Base: `http://127.0.0.1:8000/api`
   - Deployed on Vercel
 
 ## License
+
 Suryansh Dubey, 2025
